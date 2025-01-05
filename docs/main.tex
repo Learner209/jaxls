@@ -1,0 +1,478 @@
+\documentclass{ctexart}
+
+% Language setting
+% Replace `english' with e.g. `spanish' to change the document language
+\usepackage[english]{babel}
+% \usepackage{CJKutf8}
+
+\setCJKfamilyfont{myfont}{docs/SimSun.ttf}
+\newcommand{\MyFont}{\CJKfamily{myfont}}
+
+
+
+% Set page size and margins
+% Replace `letterpaper' with `a4paper' for UK/EU standard size
+\usepackage[letterpaper,top=2cm,bottom=2cm,left=1.5cm,right=1.5cm,marginparwidth=1.75cm]{geometry}
+
+% Useful packages
+\usepackage{caption}
+\usepackage{newtxtext}
+\usepackage{hyperref}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{indentfirst}
+\setlength{\parindent}{1em} 
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{subfigure}
+\usepackage{lipsum}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage[table]{xcolor}
+\usepackage{graphicx}
+\usepackage{wrapfig} % 环绕图篇
+\usepackage{xcolor}
+\usepackage{subfigure}
+\usepackage{fancyhdr}
+\usepackage{url}
+\usepackage{marvosym}
+% \usepackage{bbding}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{framed}
+\usepackage{color}
+\definecolor{shadecolor}{rgb}{0.92,0.92,0.92}
+
+
+\makeatletter
+\newenvironment{breakablealgorithm}
+  {% \begin{breakablealgorithm}
+   \begin{center}
+     \refstepcounter{algorithm}% New algorithm
+     \hrule height.8pt depth0pt \kern2pt% \@fs@pre for \@fs@ruled
+     \renewcommand{\caption}[2][\relax]{% Make a new \caption
+       {\raggedright\textbf{\ALG@name~\thealgorithm} \paragraph2\par}%
+       \ifx\relax\paragraph1\relax % #1 is \relax
+         \addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}\paragraph2}%
+       \else % #1 is not \relax
+         \addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}\paragraph1}%
+       \fi
+       \kern2pt\hrule\kern2pt
+     }
+  }{% \end{breakablealgorithm}
+     \kern2pt\hrule\relax% \@fs@post for \@fs@ruled
+   \end{center}
+  }
+\makeatother
+\begin{document}
+% \begin{CJK}{UTF8}{gbsn}
+
+
+
+% （五）大作业
+
+% 本课程的大作业是基于自己的学科领域，对于某个具体的计算问题，使用课程里相关的方法来实现数值求解。最后的结果以一份报告的形式呈现。 可以侧重于一个具体问题的数值计算，也可以侧重于特定方法的数学分析。 另一个替代方案是找到（非课本）材料里的一至两个章节，并且写一份读书笔记。 笔记里需要呈现你对该问题的理解，而不是单纯描述方法。
+% 要求：
+
+%     必须自己写代码来实现计算并绘制图像（若适用）。
+%     请在报告里注明参考文献。
+%     正文的总页数不少于4整页（不包含文献与附录等），字体为10pt或者11pt（小四号字体）。正文请不要过长（如果你想要添加一些细节，可以考虑放到附录里）。
+%     正文一般而言包含问题的背景介绍、数值方法的介绍或分析、数值实验等。
+%     最后将报告（pdf格式）、代码等打包成一个zip文件，并上传到canvas。
+%     以名字-学号-计算方法-年份.zip为命名格式。
+
+% 选题并不是越难越好，更加重要的是展现你自己对于该问题的理解以及如何使用计算方法来解决问题的思路。
+% 选题建议
+
+%     （针对第二章）对于多元函数的牛顿迭代法（比如2维问题）
+%     （针对第三章）稀疏矩阵的存储和计算；探究高斯消去法和迭代法的实际效率对比；针对一类问题探究SOR方法的最优参数选择
+%     （针对第四章）快速Fourier变换的计算；Hermite多项式；二元函数的插值
+%     （针对第五章）对于高维积分，我们通常需要使用Quasi-Monte Carlo或Monte Carlo方法。可以参考如下书籍中一至两个章节：
+%         Jun S. Liu. Monte Carlo Strategies in Scientific Computing, 2004
+%     （针对第六章）ODE求解的多步法
+
+\begin{center}
+	\Large{数值计算方法 大作业} \\
+	\normalsize{学号：521030910014}
+	\normalsize{姓名：刘洺皓}
+	\vspace{0.4cm}
+\end{center}
+
+\section{摘要}
+
+\section{背景介绍}
+
+
+
+\subsection{迭代重加权最小二乘法(IRLS)}
+
+迭代重加权最小二乘法（IRLS）用于求解具有如下形式的p-范数目标函数的优化问题：
+
+\[
+	\arg\min_{\beta} \sum_{i=1}^{n} w_i^{(t)} |y_i - x_i^T \beta|^p
+\]
+
+通过迭代方法，每一步都涉及求解一个加权最小二乘问题：
+
+\[
+	\beta^{(t+1)} = \arg\min_{\beta} \sum_{i=1}^{n} w_i^{(t)} |y_i - x_i^T \beta|^2
+\]
+
+其中，$w_i^{(t)}$是第t次迭代的权重矩阵。IRLS用于广义线性模型的最大似然估计，在稳健回归中寻找M估计量，以减轻异常值的影响，例如通过最小化最小绝对误差而不是最小二乘误差。
+
+IRLS的一个优点是它可以与高斯-牛顿和列文贝格-马夸尔特数值算法结合使用。
+
+\subsection{Lp范数线性回归}
+
+为了求解线性回归问题中Lp范数的最小化问题：
+
+\[
+	\arg\min_{\beta} \sum_{i=1}^{n} |y_i - x_i^T \beta|^p
+\]
+
+第t+1步的IRLS算法涉及求解加权最小二乘问题：
+
+\[
+	\beta^{(t+1)} = \arg\min_{\beta} \sum_{i=1}^{n} w_i^{(t)} |y_i - x_i^T \beta|^2
+\]
+
+其中，$W^{(t)}$是对角权重矩阵，通常初始设置为：
+
+\[
+	w_i^{(0)} = 1
+\]
+
+然后在每次迭代后更新为：
+
+\[
+	w_i^{(t+1)} = \left( |y_i - x_i^T \beta^{(t)}| + \epsilon \right)^{2-p}
+\]
+
+在$p=1$的情况下，这对应于最小绝对偏差回归（在这种情况下，结果会更精确，应该使用线性规划方法）。权重函数中使用$\epsilon$相当于鲁棒估计中的Huber损失函数。
+
+
+
+
+\subsection{非线性最小二乘法(NLLS)}
+
+
+非线性最小二乘法用于拟合一组$m$个观测数据，其模型在$n$个未知参数上是非线性的（$m \geq n$）。它在某些非线性回归形式中使用。该方法的基础是将模型近似为线性模型，并通过连续迭代来精化参数。它与线性最小二乘法有许多相似之处，但也有一些显著差异。在经济理论中，非线性最小二乘法应用于（i）概率回归，（ii）阈值回归，（iii）平滑回归，（iv）逻辑链接回归，（v）Box–Cox变换回归子（$m(x, \theta_t) = \theta_1 + \theta_2 x^{\theta_3}$）。
+
+\paragraph{理论}
+
+考虑一组$m$个数据点$(x_i, y_i), (x_i, y_i), \ldots, (x_i, y_n)$，以及一个曲线（模型函数）
+
+\[ y_i = f(x, \beta) \]
+
+其中，模型除了变量$x$外，还依赖于$n$个参数，$\beta = (\beta_1, \beta_2, \ldots, \beta_n)$，且$m \geq n$。目标是找到使曲线在最小二乘意义上最好地拟合给定数据的参数向量$\beta$，即最小化和
+
+\[ S = \sum_{i=1}^m r_i^2 \]
+
+其中残差（样本预测误差）$r_i$由
+
+\[ r_i = y_i - f(x_i, \beta) \]
+
+给出，$i = 1, 2, \ldots, m$。
+
+和的最小值发生在梯度为零时。由于模型包含$n$个参数，因此有$n$个梯度方程：
+
+\[ \frac{\partial S}{\partial \beta_j} = 2 \sum_{i=1}^m r_i \frac{\partial r_i}{\partial \beta_j} = 0 \quad (j = 1, \ldots, n) \]
+
+在非线性系统中，导数是独立变量和参数的函数，因此一般来说这些梯度方程没有闭合解。相反，必须为参数选择初始值，然后通过迭代来精化参数值，
+
+\[ \beta_j \approx \beta_j^{[k+1]} = \beta_j^{[k]} + \Delta \beta_j \]
+
+在这里，$k$是迭代次数，增量向量$\Delta \beta$称为位移向量。在每次迭代中，模型通过近似于一阶泰勒多项式展开来线性化，关于$\beta^{[k]}$
+
+\[ f(x_i, \beta) \approx f(x_i, \beta^{[k]}) + \sum_j \left( \frac{\partial f(x_i, \beta^{[k]})}{\partial \beta_j} \right) (\beta_j - \beta_j^{[k]}) = f(x_i, \beta^{[k]}) + \sum_j J_{ij} \Delta \beta_j \]
+
+\paragraph{初始参数估计}
+
+有些病态条件和发散问题可以通过找到接近最优值的初始参数估计来纠正。一种很好的方法是通过计算机模拟来创建初始参数估计。在屏幕上显示观测和计算数据。通过手动调整模型的参数，直到观测和计算数据之间的 agreement 合理好。尽管这是一种主观判断，但足以找到非线性优化的良好起点。
+
+\paragraph{解}
+
+任何上述方法中描述的方法都可以应用来找到解。
+
+\paragraph{收敛标准}
+
+一个常识性的收敛标准是和从一次迭代到下一次迭代不增加。然而，由于各种原因，这种方法在实践中通常很难实现。一个有用 的收敛标准是
+
+\[ \frac{\Delta S}{S} < 0.0001 \]
+
+\paragraph{数值近似雅可比矩阵}
+
+对于无法导出雅可比矩阵元素的分析表达式的情况，可以使用数值近似
+
+\[ J_{ij} = \frac{f(x_i, \beta_j + \Delta \beta_j) - f(x_i, \beta_j)}{\Delta \beta_j} \]
+
+其中增量$\Delta \beta_j$的大小应选择为使数值导数不受近似误差和舍入误差的影响。
+
+\paragraph{参数误差、置信限、残差等}
+
+一些信息在加权最小二乘法页面的相应部分给出。
+
+\paragraph{多重极小值}
+
+多重极小值可能在各种情况下出现，例如：
+
+- 参数的平方或更高次幂。例如，当拟合数据到洛伦兹曲线时
+
+\[ y = \frac{\alpha}{1 + \left( \frac{x - \gamma}{\beta} \right)^2} \]
+
+其中$\alpha$是高度，$\gamma$是位置，$\beta$是半高宽，半宽有两个解，$\beta$和$-\beta$，它们给出相同的极小值。
+
+\paragraph{算法}
+
+\paragraph{高斯-牛顿法}
+
+正则方程
+
+\[ (\mathbf{J}^T \mathbf{W} \mathbf{J}) \Delta \beta = \mathbf{J}^T \mathbf{W} \Delta y \]
+
+可以通过乔列斯基分解求解，如线性最小二乘法所述。参数迭代更新
+
+\[ \beta^{k+1} = \beta^k + \Delta \beta \]
+
+\paragraph{QR分解}
+
+最小和可以不形成正则方程来找到。残差与线性化模型可以写成
+
+\[ r = \Delta y - J \Delta \beta \]
+
+雅可比矩阵进行正交分解，QR分解可以说明这个过程。
+
+\[ J = QR \]
+
+其中$Q$是正交$m \times m$矩阵，$R$是$m \times n$矩阵，分为$n \times n$块$R_n$和$(m - n) \times n$零块。$R_n$是上三角矩阵。
+
+残差向量左乘$Q^T$
+
+\[ Q^T r = Q^T \Delta y - R \Delta \beta = \begin{bmatrix} (Q^T \Delta y - R \Delta \beta)_n \\ (Q^T \Delta y)_{m-n} \end{bmatrix} \]
+
+这不会影响和，因为$S = r^T Q Q^T r = r^T r$，因为$Q$是正交的。和的最小值在上块为零时达到。因此，位移向量通过求解
+
+\[ R_n \Delta \beta = (Q^T \Delta y)_n \]
+
+得到，这些方程很容易求解，因为$R$是上三角矩阵。
+
+\section{实验}
+
+\subsection{实验1: 二维数据拟合}
+
+\subsection{实验2: 三维数据拟合}
+
+\section{附录}
+\subsection{代码设计与架构}
+\subsubsection{\texttt{\_factor\_graph.py}}
+
+该代码实现了一个用于求解非线性最小二乘问题的因子图（Factor Graph）框架。因子图是一种图结构，用于表示变量之间的关系和约束，常用于机器人定位、计算机视觉和机器学习等领域。该框架利用JAX库进行高效的数值计算，并通过自动微分和稀疏矩阵技术优化求解过程。
+
+\paragraph{因子图表示：}
+
+变量和因子的管理：通过\texttt{FactorGraph}类管理变量和因子，变量和因子分别存储在\texttt{VarValues}和\texttt{Factor}类中。变量和因子的类型和顺序通过\texttt{VarTypeOrdering}和\texttt{sorted\_ids\_from\_var\_type}进行管理，以确保计算的一致性和效率。
+
+稀疏矩阵表示：利用稀疏矩阵（COO和CSR格式）表示雅可比矩阵，以减少存储和计算开销。通过\texttt{SparseCooCoordinates}和\texttt{SparseCsrCoordinates}类管理稀疏矩阵的坐标和值。
+
+\paragraph{求解器设计：}
+
+非线性求解器：通过\texttt{NonlinearSolver}类实现高斯-牛顿和列文贝格-马夸尔特（Levenberg-Marquardt）算法，支持不同的线性求解器（共轭梯度、Cholmod、稠密Cholesky分解）和信任区域配置。
+
+雅可比矩阵计算：通过\texttt{jax.jacfwd}和\texttt{jax.jacrev}自动计算雅可比矩阵，并根据问题规模选择合适的微分模式（前向模式或反向模式）。
+
+\paragraph{优化和性能：}
+
+自动向量化：通过\texttt{jax.vmap}和\texttt{jax.lax.map}对因子和变量进行自动向量化处理，提高计算效率。
+
+静态字段和JIT编译：利用JAX的静态字段和JIT编译功能，对计算图进行静态分析和优化，提高运行效率。
+
+\paragraph{关键组件}
+
+因子图类（\texttt{FactorGraph}）：
+
+构造函数（\texttt{make}）：负责构建因子图，包括变量排序、因子分组和雅可比矩阵坐标计算。
+
+求解方法（\texttt{solve}）：调用非线性求解器进行优化，支持不同的求解器配置和稀疏模式。
+
+残差计算（\texttt{compute\_residual\_vector}）：计算所有因子的残差向量，用于定义优化目标。
+
+因子类（\texttt{Factor}）：
+
+构造函数（\texttt{make}）：创建因子实例，包括残差计算函数和因子参数。
+
+批次轴计算（\texttt{\_get\_batch\_axes}）：确定因子的批次维度，用于向量化处理。
+
+分析因子类（\texttt{\_AnalyzedFactor}）：
+
+构造函数（\texttt{\_make}）：分析因子的变量和残差维度，计算雅可比矩阵的稀疏坐标。
+
+雅可比矩阵坐标计算（\texttt{\_compute\_block\_sparse\_jac\_indices}）：计算因子雅可比矩阵的行和列坐标。
+
+\paragraph{结论}
+
+该设计通过高效管理变量和因子，结合自动微分和稀疏矩阵技术，实现了对大规模非线性最小二乘问题的优化求解。通过合理的数据结构和JAX库的优化功能，确保了计算的高效性和准确性。
+
+\subsubsection{\texttt{solvers.py}}
+
+\paragraph{高层设计思路}
+
+该代码实现了一个用于求解非线性最小二乘问题的优化框架，利用因子图（Factor Graph）表示变量和约束关系，并通过不同的数值方法进行求解。该框架结合了JAX库的自动微分和高性能计算能力，支持多种线性求解器和终止条件配置。
+
+\paragraph{设计选择}
+
+非线性求解器：
+
+Gauss-Newton 和 Levenberg-Marquardt 方法：通过\texttt{NonlinearSolver}类实现，支持这两种经典算法来求解非线性最小二乘问题。
+
+线性求解器配置：支持共轭梯度法（Conjugate Gradient）、CHOLMOD直接求解器和稠密Cholesky分解，通过配置选项灵活选择。
+
+信任域和终止条件：
+
+信任域配置：通过\texttt{TrustRegionConfig}类配置Levenberg-Marquardt算法的信任域参数，如初始阻尼因子、阻尼因子变化率等。
+
+终止条件配置：通过\texttt{TerminationConfig}类设置最大迭代次数、成本变化容忍度、梯度容忍度和参数变化容忍度等。
+
+稀疏矩阵处理：
+
+稀疏矩阵表示：支持COO、CSR和块行稀疏矩阵表示，通过\texttt{SparseCooMatrix}、\texttt{SparseCsrMatrix}和\texttt{BlockRowSparseMatrix}类管理。
+
+矩阵乘法和转置：根据不同稀疏格式实现高效的矩阵乘法和转置操作。
+
+共轭梯度法配置：
+
+Eisenstat-Walker准则：通过\texttt{ConjugateGradientConfig}类配置共轭梯度法的不精确牛顿步骤，控制收敛容忍度的动态变化。
+
+状态管理和迭代更新：
+
+求解器状态：通过\texttt{NonlinearSolverState}类管理求解过程中的状态变量，如当前迭代次数、变量值、成本、残差向量等。
+
+迭代更新逻辑：在\texttt{NonlinearSolver.solve}方法中使用\texttt{jax.lax.while\_loop}进行迭代更新，根据终止条件决定是否停止迭代。
+
+\paragraph{关键组件}
+
+非线性求解器类（\texttt{NonlinearSolver}）：
+
+求解方法（solve）：调用不同线性求解器进行迭代优化，更新变量值和状态信息，直到满足终止条件。
+
+步骤更新（step）：计算雅可比矩阵、残差向量和线性步长，更新变量值和状态信息。
+
+信任域和终止条件配置：
+
+信任域配置（\texttt{TrustRegionConfig}）：设置Levenberg-Marquardt算法的信任域参数。
+
+终止条件配置（\texttt{TerminationConfig}）：设置迭代终止条件，如最大迭代次数和各类容忍度。
+
+共轭梯度法配置（\texttt{ConjugateGradientConfig}）：
+
+Eisenstat-Walker准则：配置不精确牛顿步骤的收敛容忍度，动态调整容忍度以加速收敛。
+
+稀疏矩阵处理：
+
+稀疏矩阵表示和操作：支持不同稀疏格式的矩阵表示和操作，确保线性求解器的高效运行。
+
+\paragraph{结论}
+
+该设计通过灵活配置不同的求解器和终止条件，结合高效的稀疏矩阵处理技术，实现了对大规模非线性最小二乘问题的优化求解。通过JAX库的自动微分和高性能计算能力，确保了计算的高效性和准确性。
+
+\subsubsection{\texttt{\_sparse\_matrices.py}}
+
+\paragraph{设计思路概述}
+
+\begin{enumerate}
+\item 稀疏块行 (\texttt{SparseBlockRow})
+
+\begin{itemize}
+	\item 目的: 用于表示稀疏矩阵中的块行结构。每个块行由多个块组成，每个块具有相同的行数但可能具有不同的列数。
+
+	\item 灵活性: 允许块具有不同的列数，通过 \texttt{block\_num\_cols} 和 \texttt{start\_cols} 来记录每个块的列数和起始列位置。
+
+	\item 高效存储: 通过将所有块按列拼接存储在 \texttt{blocks\_concat} 中，减少存储开销并提高访问效率。
+
+	\item 批量处理: 支持在 \texttt{blocks\_concat} 和 \texttt{start\_cols} 中添加一个领先的轴，以便同时处理多个块行。
+\end{itemize}
+\item 块行稀疏矩阵 (\texttt{BlockRowSparseMatrix})
+
+\begin{itemize}
+	\item 目的: 用于表示整个稀疏矩阵，由多个块行组成。
+
+	\item 有序块行: 通过有序的块行来表示整个矩阵，每个块行可以具有不同的稀疏模式。
+
+	\item 高效乘法: 提供 \texttt{multiply} 方法，通过块行乘法来实现矩阵-向量乘法，避免显式地构建密集矩阵。
+
+	\item 灵活性: 支持将多个块行拼接成一个密集矩阵，通过 \texttt{to\_dense} 方法实现。
+\end{itemize}
+
+\item 稀疏 CSR 坐标 (\texttt{SparseCsrCoordinates} 和 \texttt{SparseCsrMatrix})
+
+\begin{itemize}
+	\item 目的: 用于表示稀疏矩阵的 CSR（压缩稀疏行）格式。
+
+	\item 高效存储: 通过 \texttt{indices} 和 \texttt{indptr} 来存储非零元素的列索引和行指针，适合行稀疏的矩阵。
+
+	\item 兼容性: 提供将 CSR 格式转换为 JAX 的 BCSR 格式的方法，方便与 JAX 的稀疏矩阵运算兼容。
+\end{itemize}
+
+\item 稀疏 COO 坐标 (\texttt{SparseCooCoordinates} 和 \texttt{SparseCooMatrix})
+
+\begin{itemize}
+	\item 目的: 用于表示稀疏矩阵的 COO（坐标）格式。
+
+	\item 简单直接: 通过 \texttt{rows} 和 \texttt{cols} 来存储非零元素的行和列索引，适合构建稀疏矩阵。
+
+	\item 兼容性: 提供将 COO 格式转换为 JAX 的 BCOO 格式的方法，方便与 JAX 的稀疏矩阵运算兼容。
+\end{itemize}
+
+\paragraph{设计总结}
+
+该设计通过定义不同的稀疏矩阵表示方法，结合 JAX 的数组操作和树状结构，实现了高效、灵活的稀疏矩阵存储和运算。通过提供多种稀疏格式的支持，并且能够与 JAX 的稀疏矩阵格式兼容，使得该设计适用于各种稀疏矩阵应用场景。
+
+\subsubsection{\texttt{preconditioning.py}}
+
+设计点雅可比（Point Jacobi）和块雅可比（Block Jacobi）预条件子时，我们主要考虑了以下几个方面的设计思路和动机：
+\begin{enumerate}
+	\item 点雅可比预条件子（Point Jacobi Preconditioner）
+
+	      \begin{itemize}
+		      \item 动机：点雅可比预条件子的主要目的是加速迭代求解线性方程组的收敛速度。通过将矩阵 ATAATA 的对角线元素作为预条件子，可以有效地减少条件数，从而加速迭代方法的收敛。
+
+		      \item 设计：我们通过计算 ATAATA 的对角线元素来构造预条件子。具体来说，对于每个块行（block row），我们计算其对应的 AA 矩阵块的 L2L2​ 范数，并将其累加到对角线元素上。最终，预条件子是一个对角矩阵，其对角线元素是 ATAATA 的对角线元素的倒数。
+
+		      \item 数学表达：
+		            \texttt{预条件子=diag(ATA)−1}
+		            \texttt{预条件子=diag(ATA)−1}
+
+		            其中，diag(ATA)diag(ATA) 表示 ATAATA 的对角线元素。
+	      \end{itemize}
+
+
+	\item 块雅可比预条件子（Block Jacobi Preconditioner）
+
+	      \begin{itemize}
+		      \item 动机：块雅可比预条件子的主要目的是在保持计算效率的同时，更好地近似矩阵 ATAATA 的结构。通过将矩阵 ATAATA 的块对角线部分作为预条件子，可以更有效地减少条件数，从而加速迭代方法的收敛。
+
+		      \item 设计：我们通过计算每个变量类型对应的块对角线部分来构造预条件子。具体来说，对于每个变量类型，我们计算其对应的 AA 矩阵块的 Gramian 矩阵，并将其累加到块对角线部分。最终，预条件子是一个块对角矩阵，其每个块是对应 Gramian 矩阵的逆。
+
+		      \item 数学表达：
+		            \texttt{预条件子=block\_diag(ATA)−1}
+		            \texttt{预条件子=block\_diag(ATA)−1}
+
+		            其中，block\_diag(ATA)block\_diag(ATA) 表示 ATAATA 的块对角线部分。
+
+		      \item 数值稳定性
+
+		            在实现块雅可比预条件子时，我们通过在 Gramian 矩阵中添加一个小的单位矩阵来确保数值稳定性。这种正则化方法可以防止 Gramian 矩阵出现奇异或接近奇异的情况，从而保证预条件子的有效性。
+
+		      \item 数学表达：
+		            \texttt{Gramian=Gramian+ϵI}
+		            \texttt{Gramian=Gramian+ϵI}
+
+		            其中，\texttt{ϵ} 是一个小的正数，\texttt{I} 是单位矩阵。
+	      \end{itemize}
+
+	\item 总结
+
+	      点雅可比预条件子和块雅可比预条件子的设计都是为了加速迭代求解线性方程组的收敛速度。点雅可比预条件子通过近似矩阵 ATAATA 的对角线元素来构造预条件子，而块雅可比预条件子则通过近似矩阵 ATAATA 的块对角线部分来构造预条件子。块雅可比预条件子能够捕捉更多的矩阵结构信息，从而提供更好的预条件效果，但计算复杂度也相对较高。通过正则化方法，我们确保了块雅可比预条件子的数值稳定性。
+
+\end{enumerate}
+
+% \end{CJK}
+\end{document}
