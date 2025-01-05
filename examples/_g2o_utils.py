@@ -119,13 +119,20 @@ def parse_g2o(path: pathlib.Path, pose_count_limit: int = 100000) -> G2OData:
                 translation=onp.array(xyz),
             )
 
+            # NOTE: The precision matrix is the inverse of the covariance matrix, often referred to as the information matrix.
+            # It quantifies the uncertainty in measurements, with higher values indicating more certainty.
             precision_matrix = onp.zeros((6, 6))
             precision_matrix[onp.triu_indices(6)] = numerical_parts[7:]
             precision_matrix = precision_matrix.T
             precision_matrix[onp.triu_indices(6)] = numerical_parts[7:]
 
+            # NOTE: Cholesky decomposition is a factorization of a positive-definite matrix into a product of a lower triangular matrix and its conjugate transpose.
+            # It is used to solve linear systems and find the inverse of a matrix.
             sqrt_precision_matrix = onp.linalg.cholesky(precision_matrix).T
 
+			# NOTE: Factor Loss Function:
+            #  The factor constructs a weighted least squares loss, using the `Mahalanobis distance` between the predicted and measured relative poses
+            # , weighted by the square root of the precision matrix.
             factor = jaxls.Factor(
                 # Passing in arrays like sqrt_precision_matrix as input makes
                 # it possible for jaxfg vectorize factors.

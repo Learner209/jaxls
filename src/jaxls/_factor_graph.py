@@ -115,12 +115,20 @@ class FactorGraph:
         return jnp.concatenate(residual_slices, axis=0)
 
     def _compute_jac_values(self, vals: VarValues) -> BlockRowSparseMatrix:
+        # NOTE: Jacobian Modes:
+        # Forward Mode ("forward"): Uses jax.jacfwd for Jacobian computation. Efficient when the number of residuals (outputs) is small.
+        # Reverse Mode ("reverse"): Uses jax.jacrev for Jacobian computation. Efficient when the number of variables (inputs) is small.
+        # Auto Mode ("auto"): Chooses between jax.jacfwd and jax.jacrev based on the dimensions of residuals and tangent variables.
+
         block_rows = list[SparseBlockRow]()
         residual_offset = 0
 
         for factor in self.stacked_factors:
             # Shape should be: (num_variables, count_from_group[group_key], single_residual_dim, var.tangent_dim).
             def compute_jac_with_perturb(factor: _AnalyzedFactor) -> jax.Array:
+                # NOTE: `vals._get_subset` returns a subset of the variables that are relevant to the current factor.
+                # It uses the `factor.sorted_ids_from_var_type` to determine which variables are relevant.
+                # The `self.tangent_ordering` is used to determine the order of the variables in the subset.
                 val_subset = vals._get_subset(
                     {
                         var_type: jnp.searchsorted(vals.ids_from_type[var_type], ids)

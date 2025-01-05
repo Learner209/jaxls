@@ -23,6 +23,7 @@ def main(
         "conjugate_gradient", "cholmod", "dense_cholesky"
     ] = "conjugate_gradient",
 ) -> None:
+
     # Parse g2o file.
     with jaxls.utils.stopwatch("Reading g2o file"):
         g2o: _g2o_utils.G2OData = _g2o_utils.parse_g2o(g2o_path)
