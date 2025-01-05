@@ -22,6 +22,11 @@ def main(
     linear_solver: Literal[
         "conjugate_gradient", "cholmod", "dense_cholesky"
     ] = "conjugate_gradient",
+    termination: jaxls.TerminationConfig = jaxls.TerminationConfig(),
+    trust_region: jaxls.TrustRegionConfig = jaxls.TrustRegionConfig(),
+    sparse_mode: Literal["blockrow", "coo", "csr"] = "blockrow",
+    output_dir: pathlib.Path = pathlib.Path(__file__).parent / "exp/figs",
+    verbose: bool = True,
 ) -> None:
 
     # Parse g2o file.
@@ -44,16 +49,16 @@ def main(
 
     with jaxls.utils.stopwatch("Running solve"):
         solution_vals = graph.solve(
-            initial_vals, trust_region=None, linear_solver=linear_solver
-        )
-
-    with jaxls.utils.stopwatch("Running solve (again)"):
-        solution_vals = graph.solve(
-            initial_vals, trust_region=None, linear_solver=linear_solver
+            initial_vals,
+            trust_region=None,
+            linear_solver=linear_solver,
+            termination=termination,
+            sparse_mode=sparse_mode,
+            verbose=verbose,
         )
 
     # Plot
-    plt.figure()
+    f = plt.figure()
     if isinstance(g2o.pose_vars[0], jaxls.SE2Var):
         plt.plot(
             *(initial_vals.get_stacked_value(jaxls.SE2Var).translation().T),
@@ -86,9 +91,16 @@ def main(
     else:
         assert False
 
-    plt.title(f"Optimization on {g2o_path.stem}")
+    id = f"{g2o_path.stem}_{linear_solver}_{sparse_mode}_term_config_{termination.max_iterations}_{termination.cost_tolerance}_{termination.gradient_tolerance}_{termination.parameter_tolerance}_trust_region_{trust_region.lambda_initial}_{trust_region.lambda_factor}_{trust_region.lambda_min}_{trust_region.lambda_max}_{trust_region.step_quality_min}"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    # plt.title(f"Optimization on {g2o_path.stem} linear_solver={linear_solver} sparse_mode={sparse_mode}")
     plt.legend()
-    plt.show()
+    # plt.draw()
+    plt.tight_layout()  # Ensure all elements are visible
+
+    f.savefig(output_dir / f"{id}.pdf", bbox_inches='tight', dpi=300)
+    # plt.show()
+    plt.close()  # Close the figure to free memory
 
 
 if __name__ == "__main__":

@@ -15,6 +15,7 @@ from typing_extensions import deprecated
 from ._solvers import (
     ConjugateGradientConfig,
     NonlinearSolver,
+    NonlinearSolverState,
     TerminationConfig,
     TrustRegionConfig,
 )
@@ -83,10 +84,6 @@ class FactorGraph:
                 var_type(ids) for var_type, ids in self.sorted_ids_from_var_type.items()
             )
 
-        # In our internal API, linear_solver needs to always be a string. The
-        # conjugate gradient config is a separate field. This is more
-        # convenient to implement, because then the former can be static while
-        # the latter is a pytree.
         conjugate_gradient_config = None
         if isinstance(linear_solver, ConjugateGradientConfig):
             conjugate_gradient_config = linear_solver
