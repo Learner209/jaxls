@@ -1,23 +1,19 @@
 \documentclass{ctexart}
 
-% Language setting
-% Replace `english' with e.g. `spanish' to change the document language
-\usepackage[english]{babel}
-
-\setCJKfamilyfont{myfont}{SimSun.ttf}
-\newcommand{\MyFont}{\CJKfamily{myfont}}
+\usepackage{fontspec}  % Required for using system fonts
+\usepackage{xeCJK}     % Required for CJK support
 
 
-% Set page size and margins
-% Replace `letterpaper' with `a4paper' for UK/EU standard size
 \usepackage[letterpaper,top=2cm,bottom=2cm,left=1.5cm,right=1.5cm,marginparwidth=1.75cm]{geometry}
 
 % Useful packages
 \usepackage{caption}
-\usepackage{newtxtext}
+% NOTE: simply loaidng newtxtext will set Times Roman as the main text font for the doc, which may cause compatibility issues with CJK and other fonts. you should be *alert*.
+% \usepackage{newtxtext}
 \usepackage{hyperref}
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{indentfirst}
+
 \setlength{\parindent}{1em} 
 \usepackage{amsmath}
 \usepackage{graphicx}
@@ -25,6 +21,7 @@
 \usepackage{lipsum}
 \usepackage{booktabs}
 \usepackage{float}
+
 \usepackage[table]{xcolor}
 \usepackage{graphicx}
 \usepackage{wrapfig} % 环绕图篇
@@ -67,7 +64,6 @@
 \addbibresource{ref.bib} %Import the bibliography file
 
 \begin{document}
-% \begin{CJK}{UTF8}{gbsn}
 
 
 
@@ -96,12 +92,13 @@
 \begin{center}
 	\Large{数值计算方法 大作业} \\
 	\normalsize{学号：521030910014}
-	\normalsize{姓名：刘洺皓}
+	\normalsize{姓名： 刘{\CJKfontspec{SimSun}洺}皓}
 	\vspace{0.4cm}
+	% \setCJKmainfont
 \end{center}
 
 \section{摘要}
-本文提出了一种基于jax的优化框架, 通过Gauss-Newton或者Levenberg-Marquardt方法求解IRIS 和 NLLS 问题。我们先综述了数值计算方法在优化问题中的应用，特别是迭代重加权最小二乘法（IRLS）和非线性最小二乘法（NLLS）在Lp范数线性回归和非线性回归中的应用。此外，本文还介绍了g2o优化框架，该框架广泛应用于同时定位与地图构建（SLAM）问题中。通过实验部分，我们在二维和三维流型数据集上评估了不同求解器（如Cholesky分解和共轭梯度法）的性能，并研究了迭代次数对算法收敛速度的影响。分析表明，稀疏求解器在处理大型稀疏系统时比密集Cholesky分解更为高效和鲁棒。最后在附录中，本文讨论了代码设计与架构，特别是在利用JAX库进行高效数值计算方面的设计选择, 同时也给出了迭代次数在更多数据集上的实验。
+本文提出了一种基于jax的优化框架, 通过Gauss-Newton或者Levenberg-Marquardt方法求解IRIS 和 NLLS 问题, 代码仓库在 \url{https://github.com/Learner209/jaxopt} 。我们先综述了数值计算方法在优化问题中的应用，特别是迭代重加权最小二乘法（IRLS）和非线性最小二乘法（NLLS）在Lp范数线性回归和非线性回归中的应用。此外，本文还介绍了g2o优化框架，该框架广泛应用于同时定位与地图构建（SLAM）问题中。通过实验部分，我们在二维和三维流型数据集上评估了不同求解器（如Cholesky分解和共轭梯度法）的性能，并研究了迭代次数对算法收敛速度的影响。分析表明，稀疏求解器在处理大型稀疏系统时比密集Cholesky分解更为高效和鲁棒。最后在附录中，本文讨论了代码设计与架构，特别是在利用JAX库进行高效数值计算方面的设计选择, 同时也给出了迭代次数在更多数据集上的实验。
 \section{背景介绍}
 
 \subsection{迭代重加权最小二乘法(IRLS)}
@@ -425,22 +422,22 @@ Garage等数据集包含大量的节点和边，测试了算法在大规模数�
 \begin{figure*}[!htbp]
 	\centering
 	\subfigure[iteration: 1]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations/input_M3500_g2o/input_M3500_g2o_cholmod_blockrow_term_config_1_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations/input_M3500_g2o/input_M3500_g2o_cholmod_blockrow_term_config_1_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 2]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations/input_M3500_g2o/input_M3500_g2o_cholmod_blockrow_term_config_2_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations/input_M3500_g2o/input_M3500_g2o_cholmod_blockrow_term_config_2_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 3]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations/input_M3500_g2o/input_M3500_g2o_cholmod_blockrow_term_config_3_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations/input_M3500_g2o/input_M3500_g2o_cholmod_blockrow_term_config_3_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 4]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations/input_M3500_g2o/input_M3500_g2o_cholmod_blockrow_term_config_4_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations/input_M3500_g2o/input_M3500_g2o_cholmod_blockrow_term_config_4_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 5]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations/input_M3500_g2o/input_M3500_g2o_cholmod_blockrow_term_config_5_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations/input_M3500_g2o/input_M3500_g2o_cholmod_blockrow_term_config_5_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 6]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations/input_M3500_g2o/input_M3500_g2o_cholmod_blockrow_term_config_6_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations/input_M3500_g2o/input_M3500_g2o_cholmod_blockrow_term_config_6_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\caption{收敛速度的3D数据拟合结果 on input\_M3500\_g2o数据集}\label{exp_input_m3500_g2o_max_iters}
 \end{figure*}
@@ -448,22 +445,22 @@ Garage等数据集包含大量的节点和边，测试了算法在大规模数�
 \begin{figure*}[!htbp]
 	\centering
 	\subfigure[iteration: 1]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations/parking-garage/parking-garage_cholmod_blockrow_term_config_1_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations/parking-garage/parking-garage_cholmod_blockrow_term_config_1_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 2]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations/parking-garage/parking-garage_cholmod_blockrow_term_config_2_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations/parking-garage/parking-garage_cholmod_blockrow_term_config_2_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 3]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations/parking-garage/parking-garage_cholmod_blockrow_term_config_3_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations/parking-garage/parking-garage_cholmod_blockrow_term_config_3_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 4]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations/parking-garage/parking-garage_cholmod_blockrow_term_config_4_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations/parking-garage/parking-garage_cholmod_blockrow_term_config_4_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 5]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations/parking-garage/parking-garage_cholmod_blockrow_term_config_5_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations/parking-garage/parking-garage_cholmod_blockrow_term_config_5_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 6]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations/parking-garage/parking-garage_cholmod_blockrow_term_config_6_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations/parking-garage/parking-garage_cholmod_blockrow_term_config_6_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\caption{收敛速度的3D数据拟合结果 on parking-garage数据集}\label{exp_parking_garage_max_iters}
 \end{figure*}
@@ -471,22 +468,22 @@ Garage等数据集包含大量的节点和边，测试了算法在大规模数�
 \begin{figure*}[!htbp]
 	\centering
 	\subfigure[iteration: 1]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations/sphere2500/sphere2500_cholmod_blockrow_term_config_1_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations/sphere2500/sphere2500_cholmod_blockrow_term_config_1_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 2]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations/sphere2500/sphere2500_cholmod_blockrow_term_config_2_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations/sphere2500/sphere2500_cholmod_blockrow_term_config_2_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 3]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations/sphere2500/sphere2500_cholmod_blockrow_term_config_3_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations/sphere2500/sphere2500_cholmod_blockrow_term_config_3_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 4]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations/sphere2500/sphere2500_cholmod_blockrow_term_config_4_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations/sphere2500/sphere2500_cholmod_blockrow_term_config_4_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 5]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations/sphere2500/sphere2500_cholmod_blockrow_term_config_5_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations/sphere2500/sphere2500_cholmod_blockrow_term_config_5_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 6]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations/sphere2500/sphere2500_cholmod_blockrow_term_config_6_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations/sphere2500/sphere2500_cholmod_blockrow_term_config_6_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\caption{收敛速度的3D数据拟合结果 on sphere2500数据集}\label{exp_sphere2500_max_iters}
 \end{figure*}
@@ -494,22 +491,22 @@ Garage等数据集包含大量的节点和边，测试了算法在大规模数�
 \begin{figure*}[!htbp]
 	\centering
 	\subfigure[iteration: 1]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations/torus3D/torus3D_cholmod_blockrow_term_config_1_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations/torus3D/torus3D_cholmod_blockrow_term_config_1_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 2]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations/torus3D/torus3D_cholmod_blockrow_term_config_2_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations/torus3D/torus3D_cholmod_blockrow_term_config_2_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 3]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations/torus3D/torus3D_cholmod_blockrow_term_config_3_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations/torus3D/torus3D_cholmod_blockrow_term_config_3_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 4]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations/torus3D/torus3D_cholmod_blockrow_term_config_4_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations/torus3D/torus3D_cholmod_blockrow_term_config_4_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 5]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations/torus3D/torus3D_cholmod_blockrow_term_config_5_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations/torus3D/torus3D_cholmod_blockrow_term_config_5_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 6]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations/torus3D/torus3D_cholmod_blockrow_term_config_6_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations/torus3D/torus3D_cholmod_blockrow_term_config_6_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\caption{收敛速度的3D数据拟合结果 on torus3D 数据集}\label{exp_torus3d_g2o_max_iters}
 \end{figure*}
@@ -578,22 +575,22 @@ Cholmod：直接求解器，更准确但可能对于非常大的系统较慢。
 \begin{figure*}[!htbp]
 	\centering
 	\subfigure[iteration: 1]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations_full/grid3D.g2o/grid3D_cholmod_blockrow_term_config_1_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations_full/grid3D.g2o/grid3D_cholmod_blockrow_term_config_1_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 2]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations_full/grid3D.g2o/grid3D_cholmod_blockrow_term_config_2_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations_full/grid3D.g2o/grid3D_cholmod_blockrow_term_config_2_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 3]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations_full/grid3D.g2o/grid3D_cholmod_blockrow_term_config_3_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations_full/grid3D.g2o/grid3D_cholmod_blockrow_term_config_3_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 4]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations_full/grid3D.g2o/grid3D_cholmod_blockrow_term_config_4_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations_full/grid3D.g2o/grid3D_cholmod_blockrow_term_config_4_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 5]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations_full/grid3D.g2o/grid3D_cholmod_blockrow_term_config_5_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations_full/grid3D.g2o/grid3D_cholmod_blockrow_term_config_5_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 6]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations_full/grid3D.g2o/grid3D_cholmod_blockrow_term_config_6_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations_full/grid3D.g2o/grid3D_cholmod_blockrow_term_config_6_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\caption{收敛速度的3D数据拟合结果 on grid3D 数据集}\label{exp_grid3d_g2o_max_iters}
 \end{figure*}
@@ -601,22 +598,22 @@ Cholmod：直接求解器，更准确但可能对于非常大的系统较慢。
 \begin{figure*}[!htbp]
 	\centering
 	\subfigure[iteration: 1]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations_full/input_MITb_g2o.g2o/input_MITb_g2o_cholmod_blockrow_term_config_1_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations_full/input_MITb_g2o.g2o/input_MITb_g2o_cholmod_blockrow_term_config_1_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 2]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations_full/input_MITb_g2o.g2o/input_MITb_g2o_cholmod_blockrow_term_config_2_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations_full/input_MITb_g2o.g2o/input_MITb_g2o_cholmod_blockrow_term_config_2_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 3]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations_full/input_MITb_g2o.g2o/input_MITb_g2o_cholmod_blockrow_term_config_3_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations_full/input_MITb_g2o.g2o/input_MITb_g2o_cholmod_blockrow_term_config_3_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 4]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations_full/input_MITb_g2o.g2o/input_MITb_g2o_cholmod_blockrow_term_config_4_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations_full/input_MITb_g2o.g2o/input_MITb_g2o_cholmod_blockrow_term_config_4_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 5]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations_full/input_MITb_g2o.g2o/input_MITb_g2o_cholmod_blockrow_term_config_5_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations_full/input_MITb_g2o.g2o/input_MITb_g2o_cholmod_blockrow_term_config_5_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 6]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations_full/input_MITb_g2o.g2o/input_MITb_g2o_cholmod_blockrow_term_config_6_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations_full/input_MITb_g2o.g2o/input_MITb_g2o_cholmod_blockrow_term_config_6_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\caption{收敛速度的3d数据拟合结果 on input\_mitb\_g2o 数据集}\label{exp_input_mitb_g2o_max_iters}
 \end{figure*}
@@ -625,22 +622,22 @@ Cholmod：直接求解器，更准确但可能对于非常大的系统较慢。
 \begin{figure*}[!htbp]
 	\centering
 	\subfigure[iteration: 1]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations_full/input_M3500b_g2o.g2o/input_M3500b_g2o_cholmod_blockrow_term_config_1_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations_full/input_M3500b_g2o.g2o/input_M3500b_g2o_cholmod_blockrow_term_config_1_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 2]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations_full/input_M3500b_g2o.g2o/input_M3500b_g2o_cholmod_blockrow_term_config_2_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations_full/input_M3500b_g2o.g2o/input_M3500b_g2o_cholmod_blockrow_term_config_2_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 3]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations_full/input_M3500b_g2o.g2o/input_M3500b_g2o_cholmod_blockrow_term_config_3_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations_full/input_M3500b_g2o.g2o/input_M3500b_g2o_cholmod_blockrow_term_config_3_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 4]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations_full/input_M3500b_g2o.g2o/input_M3500b_g2o_cholmod_blockrow_term_config_4_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations_full/input_M3500b_g2o.g2o/input_M3500b_g2o_cholmod_blockrow_term_config_4_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 5]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations_full/input_M3500b_g2o.g2o/input_M3500b_g2o_cholmod_blockrow_term_config_5_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations_full/input_M3500b_g2o.g2o/input_M3500b_g2o_cholmod_blockrow_term_config_5_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 6]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations_full/input_M3500b_g2o.g2o/input_M3500b_g2o_cholmod_blockrow_term_config_6_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations_full/input_M3500b_g2o.g2o/input_M3500b_g2o_cholmod_blockrow_term_config_6_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\caption{收敛速度的3D数据拟合结果 on input\_M3500b\_g2o 数据集}\label{exp_input_m3500b_g2o_max_iters}
 \end{figure*}
@@ -649,22 +646,22 @@ Cholmod：直接求解器，更准确但可能对于非常大的系统较慢。
 \begin{figure*}[!htbp]
 	\centering
 	\subfigure[iteration: 1]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations_full/input_M3500a_g2o.g2o/input_M3500a_g2o_cholmod_blockrow_term_config_1_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations_full/input_M3500a_g2o.g2o/input_M3500a_g2o_cholmod_blockrow_term_config_1_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 2]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations_full/input_M3500a_g2o.g2o/input_M3500a_g2o_cholmod_blockrow_term_config_2_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations_full/input_M3500a_g2o.g2o/input_M3500a_g2o_cholmod_blockrow_term_config_2_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 3]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations_full/input_M3500a_g2o.g2o/input_M3500a_g2o_cholmod_blockrow_term_config_3_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations_full/input_M3500a_g2o.g2o/input_M3500a_g2o_cholmod_blockrow_term_config_3_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 4]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations_full/input_M3500a_g2o.g2o/input_M3500a_g2o_cholmod_blockrow_term_config_4_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations_full/input_M3500a_g2o.g2o/input_M3500a_g2o_cholmod_blockrow_term_config_4_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 5]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations_full/input_M3500a_g2o.g2o/input_M3500a_g2o_cholmod_blockrow_term_config_5_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations_full/input_M3500a_g2o.g2o/input_M3500a_g2o_cholmod_blockrow_term_config_5_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 6]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations_full/input_M3500a_g2o.g2o/input_M3500a_g2o_cholmod_blockrow_term_config_6_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations_full/input_M3500a_g2o.g2o/input_M3500a_g2o_cholmod_blockrow_term_config_6_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\caption{收敛速度的3D数据拟合结果 on input\_M3500a\_g2o 数据集}\label{exp_input_m3500a_g2o_max_iters}
 \end{figure*}
@@ -673,22 +670,22 @@ Cholmod：直接求解器，更准确但可能对于非常大的系统较慢。
 \begin{figure*}[!htbp]
 	\centering
 	\subfigure[iteration: 1]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations_full/input_M3500c_g2o.g2o/input_M3500c_g2o_cholmod_blockrow_term_config_1_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations_full/input_M3500c_g2o.g2o/input_M3500c_g2o_cholmod_blockrow_term_config_1_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 2]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations_full/input_M3500c_g2o.g2o/input_M3500c_g2o_cholmod_blockrow_term_config_2_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations_full/input_M3500c_g2o.g2o/input_M3500c_g2o_cholmod_blockrow_term_config_2_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 3]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations_full/input_M3500c_g2o.g2o/input_M3500c_g2o_cholmod_blockrow_term_config_3_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations_full/input_M3500c_g2o.g2o/input_M3500c_g2o_cholmod_blockrow_term_config_3_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 4]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations_full/input_M3500c_g2o.g2o/input_M3500c_g2o_cholmod_blockrow_term_config_4_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations_full/input_M3500c_g2o.g2o/input_M3500c_g2o_cholmod_blockrow_term_config_4_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 5]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations_full/input_M3500c_g2o.g2o/input_M3500c_g2o_cholmod_blockrow_term_config_5_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations_full/input_M3500c_g2o.g2o/input_M3500c_g2o_cholmod_blockrow_term_config_5_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\subfigure[iteration: 6]{
-		\includegraphics[width=0.15\textwidth]{figs/exp/figs/max_iterations_full/input_M3500c_g2o.g2o/input_M3500c_g2o_cholmod_blockrow_term_config_6_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
+		\includegraphics[width=0.14\textwidth]{figs/exp/figs/max_iterations_full/input_M3500c_g2o.g2o/input_M3500c_g2o_cholmod_blockrow_term_config_6_1e-05_0.0001_1e-06_trust_region_0.0005_2.0_1e-05_10000000000.0_0.001.pdf}
 	}
 	\caption{收敛速度的3D数据拟合结果 on input\_M3500c\_g2o 数据集}\label{exp_input_m3500c_g2o_max_iters}
 \end{figure*}

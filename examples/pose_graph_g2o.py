@@ -10,7 +10,7 @@ import pathlib
 from typing import Literal
 
 import jax
-import jaxls
+import jaxopt
 import matplotlib.pyplot as plt
 import tyro
 
@@ -22,32 +22,32 @@ def main(
     linear_solver: Literal[
         "conjugate_gradient", "cholmod", "dense_cholesky"
     ] = "conjugate_gradient",
-    termination: jaxls.TerminationConfig = jaxls.TerminationConfig(),
-    trust_region: jaxls.TrustRegionConfig = jaxls.TrustRegionConfig(),
+    termination: jaxopt.TerminationConfig = jaxopt.TerminationConfig(),
+    trust_region: jaxopt.TrustRegionConfig = jaxopt.TrustRegionConfig(),
     sparse_mode: Literal["blockrow", "coo", "csr"] = "blockrow",
     output_dir: pathlib.Path = pathlib.Path(__file__).parent / "exp/figs",
     verbose: bool = True,
 ) -> None:
 
     # Parse g2o file.
-    with jaxls.utils.stopwatch("Reading g2o file"):
+    with jaxopt.utils.stopwatch("Reading g2o file"):
         g2o: _g2o_utils.G2OData = _g2o_utils.parse_g2o(g2o_path)
         jax.block_until_ready(g2o)
 
     # Making graph.
-    with jaxls.utils.stopwatch("Making graph"):
-        graph = jaxls.FactorGraph.make(factors=g2o.factors, variables=g2o.pose_vars)
+    with jaxopt.utils.stopwatch("Making graph"):
+        graph = jaxopt.FactorGraph.make(factors=g2o.factors, variables=g2o.pose_vars)
         jax.block_until_ready(graph)
 
-    with jaxls.utils.stopwatch("Making solver"):
-        initial_vals = jaxls.VarValues.make(
+    with jaxopt.utils.stopwatch("Making solver"):
+        initial_vals = jaxopt.VarValues.make(
             (
                 pose_var.with_value(pose)
                 for pose_var, pose in zip(g2o.pose_vars, g2o.initial_poses)
             )
         )
 
-    with jaxls.utils.stopwatch("Running solve"):
+    with jaxopt.utils.stopwatch("Running solve"):
         solution_vals = graph.solve(
             initial_vals,
             trust_region=None,
@@ -59,14 +59,14 @@ def main(
 
     # Plot
     f = plt.figure()
-    if isinstance(g2o.pose_vars[0], jaxls.SE2Var):
+    if isinstance(g2o.pose_vars[0], jaxopt.SE2Var):
         plt.plot(
-            *(initial_vals.get_stacked_value(jaxls.SE2Var).translation().T),
+            *(initial_vals.get_stacked_value(jaxopt.SE2Var).translation().T),
             c="r",
             label="Initial",
         )
         plt.plot(
-            *(solution_vals.get_stacked_value(jaxls.SE2Var).translation().T),
+            *(solution_vals.get_stacked_value(jaxopt.SE2Var).translation().T),
             # Equivalent:
             # *(onp.array([solution_poses.get_value(v).translation() for v in pose_variables]).T),
             c="b",
@@ -74,16 +74,16 @@ def main(
         )
 
     # Visualize 3D poses
-    elif isinstance(g2o.pose_vars[0], jaxls.SE3Var):
+    elif isinstance(g2o.pose_vars[0], jaxopt.SE3Var):
         ax = plt.axes(projection="3d")
         ax.set_box_aspect((1.0, 1.0, 1.0))  # type: ignore
         ax.plot3D(  # type: ignore
-            *(initial_vals.get_stacked_value(jaxls.SE3Var).translation().T),
+            *(initial_vals.get_stacked_value(jaxopt.SE3Var).translation().T),
             c="r",
             label="Initial",
         )
         ax.plot3D(  # type: ignore
-            *(solution_vals.get_stacked_value(jaxls.SE3Var).translation().T),
+            *(solution_vals.get_stacked_value(jaxopt.SE3Var).translation().T),
             c="b",
             label="Optimized",
         )

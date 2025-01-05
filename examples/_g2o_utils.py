@@ -6,16 +6,16 @@ from typing import cast
 
 import jax
 import jaxlie
-import jaxls
+import jaxopt
 import numpy as onp
 from tqdm.auto import tqdm
 
 
 @dataclasses.dataclass
 class G2OData:
-    factors: list[jaxls.Factor]
+    factors: list[jaxopt.Factor]
     initial_poses: list[jaxlie.MatrixLieGroup]
-    pose_vars: list[jaxls.Var]
+    pose_vars: list[jaxopt.Var]
 
 
 def parse_g2o(path: pathlib.Path, pose_count_limit: int = 100000) -> G2OData:
@@ -25,8 +25,8 @@ def parse_g2o(path: pathlib.Path, pose_count_limit: int = 100000) -> G2OData:
         lines = [line.strip() for line in file.readlines()]
 
     var_count = 0
-    factors = list[jaxls.Factor]()
-    pose_variables = list[jaxls.Var]()
+    factors = list[jaxopt.Factor]()
+    pose_variables = list[jaxopt.Var]()
     initial_poses = list[jaxlie.MatrixLieGroup]()
 
     for line in tqdm(lines):
@@ -41,7 +41,7 @@ def parse_g2o(path: pathlib.Path, pose_count_limit: int = 100000) -> G2OData:
             index = int(index)
             x, y, theta = map(float, [x, y, theta])
             assert len(initial_poses) == index
-            variable = jaxls.SE2Var(id=var_count)
+            variable = jaxopt.SE2Var(id=var_count)
             var_count += 1
 
             initial_poses.append(jaxlie.SE2.from_xy_theta(x, y, theta))
@@ -64,7 +64,7 @@ def parse_g2o(path: pathlib.Path, pose_count_limit: int = 100000) -> G2OData:
             precision_matrix[onp.triu_indices(3)] = precision_matrix_components
             sqrt_precision_matrix = onp.linalg.cholesky(precision_matrix).T
 
-            factor = jaxls.Factor(
+            factor = jaxopt.Factor(
                 # Passing in arrays like sqrt_precision_matrix as input makes
                 # it possible vectorize factors.
                 (
@@ -93,7 +93,7 @@ def parse_g2o(path: pathlib.Path, pose_count_limit: int = 100000) -> G2OData:
             _, index, x, y, z, qx, qy, qz, qw = parts
             index = int(index)
             assert len(initial_poses) == index
-            variable = jaxls.SE3Var(id=var_count)
+            variable = jaxopt.SE3Var(id=var_count)
             initial_poses.append(
                 jaxlie.SE3(
                     wxyz_xyz=onp.array(list(map(float, [qw, qx, qy, qz, x, y, z])))  # type: ignore
@@ -133,7 +133,7 @@ def parse_g2o(path: pathlib.Path, pose_count_limit: int = 100000) -> G2OData:
 			# NOTE: Factor Loss Function:
             #  The factor constructs a weighted least squares loss, using the `Mahalanobis distance` between the predicted and measured relative poses
             # , weighted by the square root of the precision matrix.
-            factor = jaxls.Factor(
+            factor = jaxopt.Factor(
                 # Passing in arrays like sqrt_precision_matrix as input makes
                 # it possible for jaxfg vectorize factors.
                 (
@@ -160,7 +160,7 @@ def parse_g2o(path: pathlib.Path, pose_count_limit: int = 100000) -> G2OData:
             assert False, f"Unexpected line type: {parts[0]}"
 
     # Anchor start pose
-    factor = jaxls.Factor(
+    factor = jaxopt.Factor(
         lambda var_values, start_pose: (
             var_values[start_pose].inverse() @ initial_poses[0]
         ).log(),

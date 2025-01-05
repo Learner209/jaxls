@@ -11,7 +11,7 @@ import scipy
 import scipy.sparse
 from jax import numpy as jnp
 
-from jaxls._preconditioning import (
+from jaxopt._preconditioning import (
     make_block_jacobi_precoditioner,
     make_point_jacobi_precoditioner,
 )
