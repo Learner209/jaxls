@@ -64,6 +64,7 @@ class VarWithValue[T]:
 
 @jdc.pytree_dataclass
 class Var[T](metaclass=_HashableSortableMeta):
+    # NOTE: A metaclass is essentially a `class factory` that creates classes, it defines how the class itself behaves and is constructed, before any instances of this class is created.
     """A symbolic representation of an optimization variable."""
 
     id: jax.Array | int
@@ -85,9 +86,12 @@ class Var[T](metaclass=_HashableSortableMeta):
 
     def __getitem__(self, index_or_slice: int | slice) -> Self:
         """Shorthand for slicing the variable ID."""
+        # NOTE: self.__class__ refers to the current class type of the object, It's used here instead of hardcoding the class name to ensure that if a subclass 
+        # calls this method, it returns an instance of the subclass rather than the parent class. Increase flexibility and maintains proper inheritance.
         assert not isinstance(self.id, int)
         return self.__class__(self.id[index_or_slice])
 
+    # NOTE: __init_subclass__ is a special method in Python that is used to customize the behavior of subclasses. It is called when a new subclass is created.
     @overload
     def __init_subclass__[T_](
         cls,
@@ -97,6 +101,7 @@ class Var[T](metaclass=_HashableSortableMeta):
         tangent_dim: int,
     ) -> None: ...
 
+	# NOTE: the @overload function ensures static type checking for `__init_subclass__` method since it deals with multiple possible signatures.
     @overload
     def __init_subclass__(
         cls,
@@ -148,6 +153,8 @@ class Var[T](metaclass=_HashableSortableMeta):
     @staticmethod
     def _euclidean_retract(pytree: T, delta: jax.Array) -> T:
         # Euclidean retraction.
+        # NOTE: the `jax.tree_map` 's usage here is to apply element-wise addition between the original pytree and the unraveled delta.
+        # The `unravel` function converts the flattened delta back into the original pytree structure. and then the `jnp.add` function is used to perform the element-wise addition.
         flat, unravel = flatten_util.ravel_pytree(pytree)
         del flat
         return cast(T, jax.tree_map(jnp.add, pytree, unravel(delta)))
@@ -284,13 +291,19 @@ class VarValues:
         dimension computation."""
         total = 0
         for var_type, ids in self.ids_from_type.items():  # Order doesn't matter here.
+            # NOTE: ids.shape[-1] is used to get the number of elements in the last dimension of the ids array, the prepending dims maybe batch axes.
+            # This is likely to represent the number of variables of the same type in the VarValues object.
+            # var_type.tangent_dim is the dimension of the tangent space for each variable of this type.
             total += ids.shape[-1] * var_type.tangent_dim
         return total
 
     def _get_batch_axes(self) -> tuple[int, ...]:
-        return next(iter(self.ids_from_type.values())).shape[:-1]
+        return next(iter(self.ids_from_type.values())).shape[:-1] # NOTE: iter(self.ids_from_type.values()) is used to get an iterator over the values of the ids_from_type dictionary.
 
     def _retract(self, tangent: jax.Array, ordering: VarTypeOrdering) -> VarValues:
+        # NOTE: the `tangent` param is a flat vector containins concatenated tangent vectors for all variables. `tangent_slice_dim` keeps track of how many elements would be used for each variable type.
+        # `tangent_slice_start` is used to keep track of the starting index of the tangent slice for each variable type.
+        # NOTE: this function essentially applies the retraction function to each variable type, using the param `tangent vector`.
         vals_from_type = dict[type[Var[Any]], Any]()
         tangent_slice_start = 0
         for var_type, ids in (
@@ -368,6 +381,8 @@ def sort_and_stack_vars(
     # Concatenate variable IDs and values along axis=0.
     # We then re-order variables by ascending ID.
     stacked_var_from_type = {
+        # NOTE: the `jax.tree.map` function is used to apply a function to each leaf of the pytree.
+        # The `*leafs` syntax is used to unpack the list of leaves into separate arguments for the function.
         var_type: jax.tree.map(lambda *leafs: jnp.concatenate(leafs, axis=0), *vars)
         for var_type, vars in vars_from_type.items()
     }

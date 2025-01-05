@@ -14,6 +14,8 @@ def make_point_jacobi_precoditioner(
     A_blocksparse: BlockRowSparseMatrix,
 ) -> Callable[[jax.Array], jax.Array]:
     """Returns a point Jacobi (diagonal) preconditioner."""
+    # NOTE: approximate the inverse of the diagonal of A^T A by summing the components of each row of A^T A.
+    # return a lambda function that takes in a vector and returns the vector divided by the ATA diagonals.
     ATA_diagonals = jnp.zeros(A_blocksparse.shape[1])
 
     for block_row in A_blocksparse.block_rows:
@@ -41,10 +43,22 @@ def make_block_jacobi_precoditioner(
     graph: FactorGraph, A_blocksparse: BlockRowSparseMatrix
 ) -> Callable[[jax.Array], jax.Array]:
     """Returns a block Jacobi preconditioner."""
+    # NOTE:     Purpose: Approximates the inverse of block diagonal parts of the matrix A^T A, capturing more structure than point Jacobi.
+    # NOTE: `A_blocksparse` 's shape is (num_factors, residual_dim, num_vars * tangent_dim)
+
+    # Mathematical Background: For each variable type, constructs a block diagonal matrix where each block is the sum of
+    #  outer products of Jacobian blocks associated with that variable across all factors.
+    #     Inverts these blocks to form the preconditioner.
+    # Implementation Details:
+    #     Initializes gram diagonal blocks for each variable type.
+    #     Computes gramian blocks using einsum for factor-variable interactions.
+    #     Accumulates gramian blocks and inverts them.
+    #     Preconditioner function splits the input vector, applies inverse blocks, and concatenates the result.
 
     # This list will store block diagonal gram matrices corresponding to each
     # variable.
     gram_diagonal_blocks = list[jax.Array]()
+    # NOTE: Numerical Stability: Regularization with a small identity matrix prevents issues with singular blocks
     for var_type, ids in graph.tangent_ordering.ordered_dict_items(
         graph.sorted_ids_from_var_type
     ):
@@ -60,6 +74,10 @@ def make_block_jacobi_precoditioner(
 
         # Current index we're looking at in the blocks_concat array.
         start_concat_col = 0
+
+        # NOTE: graph.stacked_factors represents the number of factor groups (not individual factors). Each factor group contains similar constraint functionss.
+        # that have been vectorized together for efficient computation. Each factor group produces one block-row in the Jacobian matrix `A_blocksparse`.
+        # The individual factors within each group are stacked along the batch dimension.
 
         for var_type, ids in graph.tangent_ordering.ordered_dict_items(
             factor.sorted_ids_from_var_type

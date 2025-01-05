@@ -49,6 +49,10 @@ def _cholmod_solve_on_host(
     lambd: float | jax.Array,
 ) -> jax.Array:
     """Solve a linear system using CHOLMOD. Should be called on the host."""
+    # NOTE: solves the linear subproblem that arises in each iteration of nonlinear least squares optimization.
+    # Specifically, it efficiently solves the normal equation (A^T A + lambda * I) x = A^T b. using sparse Cholesky factorization., where A is 
+    # Jocobian matrix of residuals, b is the residual vector, nad lamabda is the damping factor.
+
     import sksparse.cholmod
 
     # Matrix is transposed when we convert CSR to CSC.

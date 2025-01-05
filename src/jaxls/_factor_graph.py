@@ -161,13 +161,18 @@ class FactorGraph:
             )
 
             # Compute block-row representation for sparse Jacobian.
+            # NOTE: `stacked_jac_start_col` keeps track of the current column position in the Jacobian matrix.
             stacked_jac_start_col = 0
+            # NOTE: `start_cols` collects the starting indices of the columns for each variable type in the Jacobian matrix.
             start_cols = list[jax.Array]()
+            # NOTE: `block_widths` collects the number of columns for each variable type in the Jacobian matrix.
             block_widths = list[int]()
             for var_type, ids in self.tangent_ordering.ordered_dict_items(
                 # This ordering shouldn't actually matter!
                 factor.sorted_ids_from_var_type
             ):
+                # NOTE: `FactorGraph.sorted_ids_from_var_type` differs from `_AnalyzedFactor.sorted_ids_from_var_type`
+                
                 (num_factor_, num_vars) = ids.shape
                 assert num_factor == num_factor_
 
@@ -286,7 +291,12 @@ class FactorGraph:
         )
 
         # Start by grouping our factors and grabbing a list of (ordered!) variables
+        # NOTE: `factors_from_group` is a dictionary that groups factors by their structure.
+        # It maps a group key to a list of factors that share the same structure.
+        # ? MAYBE this is where the automatic vectorization happens?
+        # The group key is a tuple that captures the treedef and leaf shapes of the factors.
         factors_from_group = dict[Any, list[Factor]]()
+        # NOTE: `count_from_group` is a dictionary that counts the number of factors in each group.
         count_from_group = dict[Any, int]()
         for i, factor in enumerate(factors):
             # Each factor is ultimately just a pytree node; in order for a set of
@@ -520,6 +530,7 @@ class _AnalyzedFactor[*Args](Factor[*Args]):
     ) -> tuple[jax.Array, jax.Array]:
         """Compute row and column indices for block-sparse Jacobian of shape
         (residual dim, total tangent dim). Residual indices will start at row=0."""
+        # NOTE: col_indices collects the `tangent_indices` of the columns in the Jacobian matrix that correspond to the current factor for each `var_type`.
         col_indices = list[jax.Array]()
         for var_type, ids in tangent_ordering.ordered_dict_items(
             self.sorted_ids_from_var_type
@@ -531,10 +542,12 @@ class _AnalyzedFactor[*Args](Factor[*Args]):
                 + var_indices[:, None] * var_type.tangent_dim
             )
             assert tangent_indices.shape == (
-                var_indices.shape[0],
-                var_type.tangent_dim,
+                var_indices.shape[0], # num of vars.
+                var_type.tangent_dim, # tangent dim for this specific `var_type`.
             )
             col_indices.append(cast(jax.Array, tangent_indices).flatten())
+
+		# NOTE: construct meshgrid, `rows` for residual indices, `cols` for tangent indices (for all `var_types`).
         rows, cols = jnp.meshgrid(
             jnp.arange(self.residual_dim),
             jnp.concatenate(col_indices, axis=0),
